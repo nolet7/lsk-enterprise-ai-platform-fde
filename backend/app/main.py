@@ -97,3 +97,4 @@ from middleware.identity import auth_gate
 from observability.otel import instrument
 app.middleware("http")(auth_gate)
 instrument(app)
+\n# Import read-only tool gateway after route declarations to avoid circular initialization.\nfrom . import mcp_gateway\n
