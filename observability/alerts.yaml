@@ -1,0 +1,13 @@
+groups:
+- name: lsk-platform
+  rules:
+  - alert: LSKHighAPIErrorRate
+    expr: sum(rate(lsk_requests_total{status="error"}[5m])) / clamp_min(sum(rate(lsk_requests_total[5m])),0.00001) > 0.05
+    for: 10m
+    labels: {severity: warning}
+    annotations: {summary: "High LSK API error rate"}
+  - alert: LSKHighModelLatency
+    expr: histogram_quantile(0.95,sum by(le)(rate(lsk_llm_seconds_bucket[5m]))) > 8
+    for: 10m
+    labels: {severity: warning}
+    annotations: {summary: "Model inference p95 above 8 seconds"}

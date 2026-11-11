@@ -1,0 +1,13 @@
+name: Dependency and container build validation
+on:
+  push:
+    branches: [pilot,production]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: docker build -f backend/Dockerfile .
+      - run: python -m compileall -q backend/app middleware observability

@@ -1,0 +1,2 @@
+# Evidence ledger — production reference
+Repository branch contains Terraform, Kubernetes Helm, Argo CD, monitoring rules, operational scripts and runbooks. NO infrastructure was applied to GCP, no container was deployed to GKE, no production SLO/restore/security evidence exists. The code is reference IaC, intentionally blocked by unimplemented tenant/data isolation, MCP/OAuth, durable data and hardened runtime dependencies.

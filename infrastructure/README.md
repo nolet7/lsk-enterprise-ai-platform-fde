@@ -1,0 +1,2 @@
+# Production infrastructure gaps
+Terraform provisions a VPC, GKE and CPU node pool only. Add Cloud NAT for private-node package/image egress, private access controls for GKE control plane, Cloud DNS, Artifact Registry, private endpoints, managed database, Secret Manager CSI, ingress/WAF/TLS, security policies, audit logs and centralized backups BEFORE deployment. No deploy from CI by default. Cluster creation alone is not customer-ready infrastructure. Configure resource quotas and budgets in customer project.

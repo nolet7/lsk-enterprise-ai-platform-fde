@@ -1,0 +1,18 @@
+replicaCount: 2
+image:
+  repository: ghcr.io/nolet7/lsk-enterprise-ai-platform-fde
+  tag: "0.1.0"
+  digest: ""
+service:
+  port: 18743
+resources:
+  requests: {cpu: 250m, memory: 256Mi}
+  limits: {cpu: "1", memory: 1Gi}
+oidc:
+  issuer: ""
+  audience: ""
+model:
+  baseUrl: ""
+  name: ""
+secrets:
+  existingSecret: lsk-model-credentials

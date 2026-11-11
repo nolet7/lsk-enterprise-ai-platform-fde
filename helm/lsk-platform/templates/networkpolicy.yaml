@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: {{ .Release.Name }}-ingress}
+spec:
+  podSelector: {matchLabels: {app.kubernetes.io/name: lsk-platform}}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress-system}}}]
+      ports: [{protocol: TCP, port: 18743}]
+# Egress allowlisting needs actual IdP, model, DNS, telemetry CIDRs; deny-by-default egress is a deployment gate.

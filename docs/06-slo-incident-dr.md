@@ -1,0 +1,5 @@
+# SLOs, operations, disaster recovery and customer handover
+Proposed starting SLOs, subject to customer approval: API availability 99.9% rolling 30 days; p95 API response < 2s excluding external inference; model p95 < 8s; authorized tool success >99%; no cross-tenant data access incidents. Measure against valid synthetic load and user traffic; don't present targets as achieved.
+On-call: P1 unauthorized data disclosure -> disable agent routes and revoke credentials; notify customer security and privacy leads; preserve redacted audit and traces. P2 elevated 5xx or latency -> check metrics, model provider throttling, token usage, pod saturation, and rollback last approved image. P3 retrieval drift -> freeze promotion, run eval and reindex only after review.
+Recovery: define RPO 15m/RTO 4h as proposed only. Implement daily encrypted backups with tested restores and quarterly disaster exercises before adopting targets.
+Handover package: architecture diagram, data flow, ownership/RACI, catalog, runbooks, known limitations, security approval, operational dashboards, cost report, failover evidence, release and incident playbooks, training attendance.
