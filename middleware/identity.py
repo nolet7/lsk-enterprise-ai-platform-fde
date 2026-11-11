@@ -27,16 +27,7 @@ async def auth_gate(request:Request,call_next):
     except Exception:
         DENIED.labels("invalid_token").inc()
         return JSONResponse({"detail":"Invalid identity or tenant"},status_code=401)
-    # Prevent client-controlled tenant spoofing in all request bodies.
-    if request.url.path=="/api/agents/chat" and request.method=="POST":
-        body=await request.body()
-        try: obj=json.loads(body)
-        except ValueError:return JSONResponse({"detail":"Invalid JSON"},status_code=400)
-        obj["tenant"]=tenant
-        new_body=json.dumps(obj).encode()
-        async def receive():return {"type":"http.request","body":new_body,"more_body":False}
-        request._receive=receive
-    if request.url.path.startswith("/api/deployments") and request.method=="POST" and "platform-requester" not in request.state.identity["roles"]:
+    # All handlers must derive tenant from request.state.identity, never client JSON.\n    if request.url.path.startswith("/api/deployments") and request.method=="POST" and "platform-requester" not in request.state.identity["roles"]:
         DENIED.labels("missing_role").inc()
         return JSONResponse({"detail":"platform-requester role required"},status_code=403)
     return await call_next(request)
