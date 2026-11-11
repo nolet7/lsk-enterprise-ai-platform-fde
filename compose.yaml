@@ -1,0 +1,17 @@
+services:
+  platform:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "18743:18743"
+    environment:
+      DB_PATH: /tmp/lsk-platform.db
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-}
+      MODEL_NAME: ${MODEL_NAME:-}
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18743/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5

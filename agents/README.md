@@ -1,0 +1,1 @@
+Agent registry and grounded retrieval are implemented in backend/app/agents.py in POC. Pilot adds evaluations and explicit tool authorization. The POC knowledge corpus is synthetic, not customer data.
