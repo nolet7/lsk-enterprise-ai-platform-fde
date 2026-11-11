@@ -91,3 +91,9 @@ async def chat(q:Chat):
 @app.get("/api/audit")
 def audit():
     with conn() as c:return [dict(x) for x in c.execute("SELECT * FROM audit ORDER BY rowid DESC LIMIT 100")]
+
+# Pilot modules are optional in POC; fail closed when REQUIRE_AUTH=true.
+from middleware.identity import auth_gate
+from observability.otel import instrument
+app.middleware("http")(auth_gate)
+instrument(app)
