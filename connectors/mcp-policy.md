@@ -1,0 +1,2 @@
+# MCP authorization contract (design, not implemented)
+Every tool invocation must carry authenticated subject, tenant, scopes, reason and trace ID derived from server-side token verification. Require explicit allowlist, token exchange or vendor-supported OAuth delegated credentials, per-resource access checks, rate limits and audit entry. Refuse tools on insufficient scopes. Never re-use a platform-wide privileged credential for user-delegated operations. No MCP server or OAuth delegation has been deployed in this pilot.

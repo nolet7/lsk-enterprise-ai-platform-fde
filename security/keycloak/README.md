@@ -1,0 +1,3 @@
+# Keycloak pilot configuration
+Use a real customer IdP endpoint in OIDC_ISSUER and the public API audience in OIDC_AUDIENCE. Create a realm and confidential or public client as appropriate; add a mapper for tenant_id to access tokens from trusted user attributes. Add realm role platform-requester for deployment requestors. Ensure issuer discovery/JWKS URL is accessible from the API network. All calls require signed RS256 JWTs when REQUIRE_AUTH=true. No insecure bypass header. Validate negative tests and rotate keys in pilot.
+Do NOT use Keycloak development mode as a production identity system. Verify token audience and issuer, tenant-boundary checks, JWKS rotation, and request size controls.
