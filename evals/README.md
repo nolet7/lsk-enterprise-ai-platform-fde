@@ -1,1 +1,3 @@
-Evaluation suite comes with pilot. Manual checks at POC include grounded citations, refusal when corpus does not support the answer, and injection resistance; these are not formal evaluated scores.
+# Reproducible evaluations
+From a running real-model deployment use `python evals/benchmark.py`; this records response text, cited source overlap, latency and errors. Case scripts do NOT automatically prove safety or RAG answer correctness; human review and wider adversarial cases are mandatory.
+To record artifacts: `pip install -r evals/requirements.txt`; configure a secured MLFLOW_TRACKING_URI; run `python evals/mlflow_tracking.py`. Logs model name, prompt version, run metrics and JSON. MLflow isn't automatically deployed. Do not log actual confidential prompts in an unapproved tracking backend.
