@@ -1,6 +1,6 @@
 import os, sqlite3, time, json, uuid
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
@@ -19,8 +19,8 @@ def init():
     Path(DB).parent.mkdir(parents=True, exist_ok=True)
     with conn() as c:
         c.executescript("""CREATE TABLE IF NOT EXISTS apps (id TEXT PRIMARY KEY, name TEXT, owner TEXT, kind TEXT);
-        CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, requester TEXT, category TEXT, detail TEXT, status TEXT);
-        CREATE TABLE IF NOT EXISTS deployments (id TEXT PRIMARY KEY, app_id TEXT, requester TEXT, environment TEXT, status TEXT);
+        CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, requester TEXT, category TEXT, detail TEXT, status TEXT);
+        CREATE TABLE IF NOT EXISTS deployments (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, app_id TEXT, requester TEXT, environment TEXT, status TEXT);
         CREATE TABLE IF NOT EXISTS audit (id TEXT PRIMARY KEY, event TEXT, detail TEXT);""")
         c.execute("INSERT OR IGNORE INTO apps VALUES ('crm','Commercial CRM','sales','legacy')")
         c.execute("INSERT OR IGNORE INTO apps VALUES ('procurement','Procurement Desk','finance','legacy')")
@@ -38,7 +38,7 @@ class Chat(BaseModel):
     agent_id:str
     question:str
     tenant:str="demo"
-def record(event,detail):
+def tenant_for(request: Request):\n    identity=getattr(request.state,"identity",None)\n    if identity:return identity["tenant"]\n    if os.getenv("REQUIRE_AUTH","false").lower()=="true":raise HTTPException(401,"Identity required")\n    return "demo"\ndef record(event,detail):
     with conn() as c: c.execute("INSERT INTO audit VALUES (?,?,?)",(str(uuid.uuid4()),event,json.dumps(detail)))
 @app.get("/healthz")
 def health():return {"status":"ok","mode":"poc"}
@@ -55,19 +55,19 @@ def apps():
 def tickets():
     with conn() as c:return [dict(x) for x in c.execute("SELECT * FROM tickets ORDER BY rowid DESC")]
 @app.post("/api/tickets")
-def create_ticket(t:Ticket):
+def create_ticket(t:Ticket,request:Request):
     t_id=str(uuid.uuid4())
-    with conn() as c:c.execute("INSERT INTO tickets VALUES (?,?,?,?,?)",(t_id,t.requester,t.category,t.detail,"open"))
+    with conn() as c:c.execute("INSERT INTO tickets VALUES (?,?,?,?,?,?)",(t_id,tenant_for(request),t.requester,t.category,t.detail,"open"))
     REQUESTS.labels("legacy_ticket","ok").inc()
     record("ticket_created",{"id":t_id})
     return {"id":t_id,"status":"open"}
 @app.post("/api/deployments")
-def deployment(d:Deployment):
+def deployment(d:Deployment,request:Request):
     if d.environment not in ("dev","test"):raise HTTPException(403,"POC only accepts dev/test")
     with conn() as c:
         if not c.execute("SELECT id FROM apps WHERE id=?",(d.app_id,)).fetchone():raise HTTPException(404,"Unknown app")
         d_id=str(uuid.uuid4())
-        c.execute("INSERT INTO deployments VALUES (?,?,?,?,?)",(d_id,d.app_id,d.requester,d.environment,"requested"))
+        c.execute("INSERT INTO deployments VALUES (?,?,?,?,?,?)",(d_id,tenant_for(request),d.app_id,d.requester,d.environment,"requested"))
     record("deployment_requested",{"id":d_id})
     return {"id":d_id,"status":"requested","note":"No deployment executed; approval needed"}
 @app.get("/api/deployments")
@@ -76,13 +76,13 @@ def deployments():
 @app.get("/api/agents")
 def agents():return [{"id":k,**v} for k,v in AGENTS.items()]
 @app.post("/api/agents/chat")
-async def chat(q:Chat):
+async def chat(q:Chat,request:Request):
     if q.agent_id not in AGENTS: raise HTTPException(404,"Unknown agent")
     start=time.monotonic()
     try:
-        result=await run_agent(q.agent_id,q.question,q.tenant)
+        result=await run_agent(q.agent_id,q.question,tenant_for(request))
         REQUESTS.labels("ai_chat","ok").inc()
-        record("agent_answer",{"agent":q.agent_id,"tenant":q.tenant,"trace_id":result["trace_id"]})
+        record("agent_answer",{"agent":q.agent_id,"tenant":tenant_for(request),"trace_id":result["trace_id"]})
         return result
     except Exception:
         REQUESTS.labels("ai_chat","error").inc()
